@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>পাইকারি বাজার - B2B মাল্টি-লেভেল প্ল্যাটফর্ম</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: #f3f4f6; color: #1f2937; padding-bottom: 40px; }
+    header { background-color: #0f172a; color: white; padding: 15px 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+    .nav-btn { background: #334155; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-right: 6px; margin-bottom: 6px; font-size: 0.85rem; }
+    .nav-btn.active { background: #16a34a; }
+    .nav-btn.company { background: #0284c7; }
+    .nav-btn.admin { background: #7c3aed; }
+    .container { max-width: 950px; margin: 20px auto; padding: 0 15px; }
+    .card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    .banner { background: linear-gradient(135deg, #059669, #047857); color: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+    .btn { background: #16a34a; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; display: inline-block; text-align: center; text-decoration: none; }
+    .btn:hover { background: #15803d; }
+    .btn-danger { background: #dc2626; }
+    .btn-secondary { background: #0284c7; }
+    .btn-purple { background: #7c3aed; }
+    .btn-sm { padding: 6px 12px; font-size: 0.8rem; width: auto; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 15px; }
+    .prod-card { background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px; display: flex; flex-direction: column; justify-content: space-between; }
+    .price { font-size: 1.2rem; font-weight: bold; color: #16a34a; margin: 8px 0; }
+    input, select, textarea { width: 100%; padding: 10px; margin-top: 5px; margin-bottom: 12px; border: 1px solid #cbd5e1; border-radius: 6px; }
+    .badge { background: #dcfce7; color: #166534; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; }
+    .badge-zone { background: #e0f2fe; color: #0369a1; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { padding: 10px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+    th { background-color: #f8fafc; }
+    
+    .qty-control { display: flex; align-items: center; justify-content: space-between; background: #f1f5f9; border-radius: 8px; padding: 4px; border: 1px solid #cbd5e1; margin-top: 10px; }
+    .qty-btn { background: #16a34a; color: white; border: none; width: 36px; height: 36px; border-radius: 6px; font-size: 1.2rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .qty-btn.minus { background: #dc2626; }
+    .qty-input { width: 60px; text-align: center; border: none; background: transparent; font-size: 1.1rem; font-weight: bold; color: #1f2937; margin: 0; padding: 0; outline: none; }
+
+    .accordion-header { cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; }
+    .accordion-header:hover { opacity: 0.85; }
+
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center; }
+    .modal-box { background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 460px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; }
+
+    @media print {
+      body * { visibility: hidden; }
+      #printable-memo, #printable-memo * { visibility: visible; }
+      #printable-memo { position: absolute; left: 0; top: 0; width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h2>🛒 পাইকারি বাজার (B2B Multi-Level Network)</h2>
+    <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 10px;">মেগা অ্যাডমিন ➔ কোম্পানি ➔ এরিয়া ডিলার ➔ খদ্দের দোকানদার</p>
+    <button id="btn-shop" class="nav-btn active" onclick="switchView('shop')">📱 দোকানদার অ্যাপ</button>
+    <button id="btn-dealer" class="nav-btn" onclick="showPassModal('dealer')">📈 ডিলার ড্যাশবোর্ড 🔒</button>
+    <button id="btn-company" class="nav-btn company" onclick="showPassModal('company')">🏢 কোম্পানি প্যানেল 🔐</button>
+    <button id="btn-admin" class="nav-btn admin" onclick="showPassModal('admin')">👑 মেগা অ্যাডমিন 🔐</button>
+  </header>
+
+  <div class="container">
+
+    <!-- ১. দোকানদার ভিউ -->
+    <div id="shop-view">
+      <div class="banner">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px;">
+          <span style="font-size: 0.8rem; background: rgba(255,255,255,0.2); padding: 3px 8px; border-radius: 4px;">মুদি দোকানদার অর্ডারিং প্যানেল</span>
+          <div style="display: flex; gap: 5px;">
+            <button style="background: white; color: #047857; border: none; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: bold;" onclick="editShopProfile()">✏️ প্রোফাইল ও ভেরিফিকেশন</button>
+            <button style="background: #fef08a; color: #854d0e; border: none; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: bold;" onclick="showRecoveryModal('shop')">🔄 পাসওয়ার্ড রিকভারি</button>
+          </div>
+        </div>
+        <h2 id="shop-title" style="margin-top: 8px;">মেসার্স রহিম স্টোর</h2>
+        <p id="shop-desc" style="margin-top: 8px; font-size: 0.9rem; line-height: 1.5;">
+          📍 <b>দোকান/রোড নং:</b> দোকান নং ৪২, রোড নং ৫ <br>
+          🏘️ <b>গ্রাম/মহল্লা:</b> কাঁচাবাজার, মিরপুর-১০ <br>
+          🏙️ <b>থানা/জেলা:</b> মিরপুর, ঢাকা | 📞 <b>মোবাইল:</b> 01711223344 (ভেরিফাইড)
+        </p>
+        <div id="map-link-container" style="margin-top: 10px;"></div>
+      </div>
+
+      <div class="card" style="background: #f0f9ff; border: 1px solid #bae6fd;">
+        <label><b>🏢 কোম্পানি নির্বাচন করুন:</b></label>
+        <select id="company-select" onchange="onCompanySelectChange()" style="font-weight: bold; color: #0369a1;"></select>
+
+        <label style="margin-top: 10px; display: block;"><b>🗺️ এলাকা / এরিয়া ডিলার নির্বাচন করুন:</b></label>
+        <select id="dealer-select" onchange="filterProductsByDealer()" style="font-weight: bold; color: #15803d; margin-bottom: 0;"></select>
+      </div>
+
+      <div class="card">
+        <h3>🛍️ পণ্যের তালিকা (অর্ডার করুন)</h3>
+        <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 12px;">পণ্য অর্ডারের পরিমাণ বাড়াতে বা কমাতে `[-]` ও `[+]` বাটন ব্যবহার করুন অথবা বক্সে লিখে টাইপ করুন।</p>
+        <div class="grid" id="product-list"></div>
+      </div>
+
+      <div class="card">
+        <h3>🛒 কার্ট (অর্ডার সামারি)</h3>
+        <table id="cart-table">
+          <thead>
+            <tr><th>পণ্য</th><th>পরিমাণ</th><th>মূল্য</th></tr>
+          </thead>
+          <tbody id="cart-items">
+            <tr><td colspan="3" style="text-align:center;">কার্ট খালি</td></tr>
+          </tbody>
+        </table>
+        <br>
+        <h4>সর্বমোট: ৳<span id="cart-total">0</span></h4>
+        <p style="font-size: 0.85rem; color: #64748b; margin: 5px 0;">পেমেন্ট পদ্ধতি: ক্যাশ অন ডেলিভারি (নগদ পেমেন্ট)</p>
+        <button class="btn" onclick="placeOrder()">অর্ডার কনফার্ম করুন</button>
+      </div>
+    </div>
+
+    <!-- ২. ডিলার ভিউ -->
+    <div id="dealer-view" style="display: none;">
+      <div class="card" style="background: #f0fdf4; border: 1px solid #bbf7d0;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+          <div>
+            <h3 id="current-dealer-name">ডিলার ড্যাশবোর্ড</h3>
+            <p style="font-size: 0.85rem; color: #166534;" id="current-dealer-info"></p>
+          </div>
+          <button class="nav-btn" style="background:#ef4444;" onclick="logoutDealer()">লগআউট 🔒</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>➕ ডিলারের নিজস্ব পণ্য ও স্টক ম্যানেজমেন্ট</h3>
+        <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 12px;">আপনার কাছে থাকা পণ্যের স্টক, পাইকারি দর নির্ধারণ করুন বা অপ্রয়োজনীয় পণ্য মুছুন।</p>
+        <form onsubmit="saveDealerProduct(event)">
+          <label>পণ্যের নাম</label>
+          <input type="text" id="dp-name" required placeholder="যেমন: মিনিকেট চাল (২৫ কেজি বস্তা)">
+          <label>পাইকারি দর (টাকা)</label>
+          <input type="number" id="dp-price" required placeholder="যেমন: 1650">
+          <label>মজুদ পরিমাণ (স্টোক)</label>
+          <input type="text" id="dp-stock" required placeholder="যেমন: 40 বস্তা">
+          <button type="submit" class="btn">পণ্য যোগ/আপডেট করুন</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="accordion-header" onclick="toggleAccordion('dealer-stock-body', 'dealer-stock-icon')">
+          <h3>📦 আপনার বর্তমান স্টক ও প্রডাক্ট লিস্ট</h3>
+          <span id="dealer-stock-icon" style="font-size: 1.2rem; color: #16a34a; font-weight: bold;">▼</span>
+        </div>
+        <div id="dealer-stock-body" style="margin-top: 15px; display: block;">
+          <div id="dealer-own-products-list"></div>
+        </div>
+      </div>
+
+      <div class="card" style="background: #fdf4ff; border: 1px solid #f5d0fe;">
+        <div class="accordion-header" onclick="toggleAccordion('company-stock-body', 'company-stock-icon')">
+          <h3 style="color: #701a75;">🏢 কোম্পানির স্টক</h3>
+          <span id="company-stock-icon" style="font-size: 1.2rem; color: #a21caf; font-weight: bold;">▶</span>
+        </div>
+        <div id="company-stock-body" style="margin-top: 15px; display: none;">
+          <p style="font-size: 0.8rem; color: #86198f; margin-bottom: 10px;">মূল কোম্পানি কি কি পণ্য সপ্লাই দিচ্ছে তা নিচে থেকে দেখতে পারবেন:</p>
+          <div id="company-master-stock-view"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>📋 খদ্দেরদের প্রাপ্ত অর্ডারসমূহ (মেমো প্রিন্ট)</h3>
+        <div id="orders-list"></div>
+      </div>
+    </div>
+
+    <!-- ৩. কোম্পানি প্যানেল ভিউ -->
+    <div id="company-view" style="display: none;">
+      <div class="card" style="background: #f0f9ff; border: 1px solid #bae6fd;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+          <div>
+            <h2 id="current-company-title">কোম্পানি অ্যাডমিন প্যানেল</h2>
+            <p style="font-size: 0.85rem; color: #0369a1;" id="current-company-id"></p>
+          </div>
+          <button class="nav-btn" style="background:#ef4444;" onclick="logoutCompany()">লগআউট 🔒</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>🗺️ বিভিন্ন জোনে নতুন এরিয়া ডিলারশিপ তৈরি করুন</h3>
+        <br>
+        <form onsubmit="createAreaDealer(event)">
+          <label>এরিয়া/জোনের নাম</label>
+          <input type="text" id="cd-zone" required placeholder="যেমন: মিরপুর জোন / ধানমন্ডি এরিয়া">
+          <label>ডিলারের নাম / এজেন্সির নাম</label>
+          <input type="text" id="cd-name" required placeholder="যেমন: মেসার্স বিসমিল্লাহ ট্রেডার্স">
+          <label>মোবাইল নম্বর (ভেরিফাইড)</label>
+          <input type="text" id="cd-phone" required placeholder="যেমন: 01700000000">
+          <label>জিমেইল আইডি (ভেরিফাইড)</label>
+          <input type="email" id="cd-email" required placeholder="যেমন: dealer@gmail.com">
+          <label>ডিলারশিপ ইউজার আইডি</label>
+          <input type="text" id="cd-id" required placeholder="যেমন: dealer_mirpur">
+          <label>ডিলার পাসওয়ার্ড</label>
+          <input type="text" id="cd-pass" required placeholder="যেমন: 5566">
+          <button type="submit" class="btn btn-secondary">নতুন ডিলারশিপ চালু করুন</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h3>👥 আপনার অধীনস্থ এরিয়া ডিলারদের তালিকা ও ডিলিট কন্ট্রোল</h3>
+        <div id="company-dealers-list"></div>
+      </div>
+
+      <div class="card">
+        <h3>🏭 কোম্পানির মূল মাস্টার প্রোডাক্ট লিস্ট</h3>
+        <form onsubmit="saveCompanyMasterProduct(event)">
+          <label>পণ্যের নাম</label>
+          <input type="text" id="cp-name" required placeholder="যেমন: তীর সয়াবিন তেল (৫ লিটার)">
+          <label>কোম্পানি বেস প্রাইস (টাকা)</label>
+          <input type="number" id="cp-price" required placeholder="যেমন: 800">
+          <button type="submit" class="btn btn-secondary">মাস্টার প্রডাক্ট সেভ করুন</button>
+        </form>
+        <br>
+        <div id="company-master-products-list"></div>
+      </div>
+    </div>
+
+    <!-- ৪. মেগা অ্যাডমিন ভিউ (মালিকের মূল প্যানেল) -->
+    <div id="admin-view" style="display: none;">
+      <div class="card" style="background: #f3e8ff; border: 1px solid #d8b4fe;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <h2>👑 মেগা অ্যাডমিন মাস্টার কন্ট্রোল</h2>
+            <p style="font-size: 0.85rem; color: #6b21a8;">আপনার অ্যাপ ব্যবহারকারী সমস্ত কোম্পানি অ্যাকাউন্ট মেগা-কন্ট্রোল করুন</p>
+          </div>
+          <button class="nav-btn" style="background:#ef4444;" onclick="logoutAdmin()">লগআউট 🔒</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>🏢 নতুন কোম্পানি অনবোর্ডিং তৈরি করুন</h3>
+        <br>
+        <form onsubmit="createCompany(event)">
+          <label>কোম্পানির নাম</label>
+          <input type="text" id="comp-name" required placeholder="যেমন: এসএইচবি গ্রুপ / সিটি গ্রুপ">
+          <label>মোবাইল নম্বর (ভেরিফাইড)</label>
+          <input type="text" id="comp-phone" required placeholder="যেমন: 01800000000">
+          <label>জিমেইল আইডি (ভেরিফাইড)</label>
+          <input type="email" id="comp-email" required placeholder="যেমন: company@gmail.com">
+          <label>কোম্পানি আইডি (User ID)</label>
+          <input type="text" id="comp-id" required placeholder="যেমন: shb_group">
+          <label>কোম্পানি সিকিউরিটি পাসওয়ার্ড</label>
+          <input type="text" id="comp-pass" required placeholder="যেমন: comp123">
+          <button type="submit" class="btn btn-purple">নতুন কোম্পানি যুক্ত করুন</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h3>🏢 সকল নিবন্ধিত কোম্পানির তালিকা</h3>
+        <div id="all-companies-list"></div>
+      </div>
+    </div>
+
+    <!-- প্রিন্ট করার মেমো -->
+    <div id="printable-memo" class="card" style="display:none;">
+      <h2 style="text-align:center;" id="memo-dealer-title">পাইকারি পরিবেশক</h2>
+      <p style="text-align:center; font-size: 0.8rem;">ক্যাশ মেমো / ডেলিভারি চালান</p>
+      <hr style="margin: 10px 0;">
+      <div id="memo-details"></div>
+      <br>
+      <button class="btn" onclick="window.print()">মেমো প্রিন্ট করুন (A4 / POS)</button>
+      <button class="btn btn-danger" style="margin-top: 5px;" onclick="document.getElementById('printable-memo').style.display='none'">বন্ধ করুন</button>
+    </div>
+
+  </div>
+
+  <!-- আইডি ও পাসওয়ার্ড রিকভারি মডাল (অটো ওটিপি সহ) -->
+  <div id="recovery-modal" class="modal-overlay">
+    <div class="modal-box" style="text-align: center;">
+      <h3 style="margin-bottom: 10px; color: #0284c7;">🔑 পাসওয়ার্ড রিকভারি ও অটো ওটিপি</h3>
+      
+      <!-- স্টেপ ১ -->
+      <div id="rec-step-1">
+        <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 15px;">আপনার রেজিস্টার্ড মোবাইল নম্বর অথবা জিমেইল দিন:</p>
+        <input type="text" id="rec-input" placeholder="মোবাইল নম্বর অথবা জিমেইল" style="text-align: center; font-size: 1rem;">
+        <p id="rec-error" style="color: red; font-size: 0.85rem; display: none; margin-bottom: 10px;"></p>
+        <div style="display: flex; gap: 10px; margin-top: 10px;">
+          <button class="btn btn-secondary" onclick="sendAutoRecoveryOTP()">অটো ওটিপি পাঠান</button>
+          <button class="btn btn-danger" onclick="hideRecoveryModal()">বাতিল</button>
+        </div>
+      </div>
+
+      <!-- স্টেপ ২ -->
+      <div id="rec-step-2" style="display: none;">
+        <p id="otp-sent-msg" style="font-size: 0.85rem; color: #16a34a; margin-bottom: 15px; font-weight: bold;"></p>
+        <label style="font-size: 0.85rem; display: block; text-align: left; margin-bottom: 5px;">অটো ওটিপি কোড (স্বয়ংক্রিয় বসানো হয়েছে):</label>
+        <input type="text" id="rec-otp-input" placeholder="৪ ডিজিটের ওটিপি" style="text-align: center; font-size: 1.1rem; letter-spacing: 3px;" readonly style="background: #f1f5f9;">
+        <p id="otp-error" style="color: red; font-size: 0.85rem; display: none; margin-bottom: 10px;">ভুল ওটিপি কোড!</p>
+        <div style="display: flex; gap: 10px; margin-top: 10px;">
+          <button class="btn" onclick="verifyAutoRecoveryOTP()">ওটিপি ভেরিফাই করুন</button>
+          <button class="btn btn-danger" onclick="hideRecoveryModal()">বাতিল</button>
+        </div>
+      </div>
+
+      <!-- স্টেপ ৩ -->
+      <div id="rec-step-3" style="display: none;">
+        <p style="font-size: 0.85rem; color: #16a34a; margin-bottom: 15px; font-weight: bold;">✅ ওটিপি ভেরিফাই সফল! এখন নতুন পাসওয়ার্ড সেট করুন:</p>
+        <input type="password" id="new-pass-input" placeholder="নতুন পাসওয়ার্ড দিন" style="text-align: center; font-size: 1.1rem;">
+        <div style="display: flex; gap: 10px; margin-top: 10px;">
+          <button class="btn" onclick="saveNewPassword()">পাসওয়ার্ড আপডেট করুন</button>
+          <button class="btn btn-danger" onclick="hideRecoveryModal()">বাতিল</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- কোম্পানি কর্তৃক ডিলার ডিলিট ভেরিফিকেশন পপ-আপ -->
+  <div id="company-delete-dealer-modal" class="modal-overlay">
+    <div class="modal-box" style="text-align: center;">
+      <h3 style="margin-bottom: 10px; color: #dc2626;">🗑️ ডিলারশিপ ডিলিট নিশ্চিতকরণ</h3>
+      <p id="delete-dealer-info" style="font-size: 0.85rem; color: #64748b; margin-bottom: 15px;"></p>
+      <label style="font-size: 0.85rem; display: block; text-align: left; margin-bottom: 5px;">ডিলিট করতে কোম্পানির পাসওয়ার্ড দিন:</label>
+      <input type="password" id="company-del-pass-input" placeholder="কোম্পানির পাসওয়ার্ড" style="text-align: center;">
+      <p id="company-del-err" style="color: red; font-size: 0.85rem; display: none; margin-bottom: 10px;">ভুল কোম্পানির পাসওয়ার্ড!</p>
+      
+      <div style="display: flex; gap: 10px;">
+        <button class="btn btn-danger" onclick="confirmCompanyDeleteDealer()">ডিলিট করুন</button>
+        <button class="btn btn-secondary" onclick="hideCompanyDeleteModal()">বাতিল</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ইউনিভার্সাল লগইন পপ-আপ -->
+  <div id="pass-modal" class="modal-overlay">
+    <div class="modal-box" style="text-align: center;">
+      <h3 id="modal-title" style="margin-bottom: 10px;">🔒 প্যানেল প্রবেশ ব্যবস্থা</h3>
+      <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 15px;">প্রবেশ করতে ইউজার আইডি ও সিকিউরিটি পাসওয়ার্ড দিন:</p>
+
+      <div id="dynamic-login-fields">
+        <input type="text" id="login-user-id" placeholder="ইউজার আইডি" style="text-align: center;">
+      </div>
+      
+      <input type="password" id="login-pass-input" placeholder="পাসওয়ার্ড দিন" style="text-align: center; font-size: 1.1rem; letter-spacing: 2px;">
+      <p id="pass-error" style="color: red; font-size: 0.85rem; display: none; margin-bottom: 10px;">ভুল আইডি বা পাসওয়ার্ড!</p>
+      
+      <div style="display: flex; gap: 10px;">
+        <button class="btn" onclick="verifyLogin()">ওকে (OK)</button>
+        <button class="btn btn-danger" onclick="hidePassModal()">বাতিল (Cancel)</button>
+      </div>
+      <p style="margin-top: 12px; font-size: 0.8rem;"><a href="javascript:void(0)" onclick="openRecoveryFromLogin()" style="color: #0284c7; font-weight: bold; text-decoration: underline;">🔑 আইডি/পাসওয়ার্ড ভুলে গেছেন? রিকভার করুন</a></p>
+    </div>
+  </div>
+
+  <!-- দোকানদার প্রোফাইল পপ-আপ -->
+  <div id="shop-modal" class="modal-overlay">
+    <div class="modal-box">
+      <h3 style="margin-bottom: 12px; text-align: center;">🏠 দোকানের তথ্য ও ফোন/জিমেইল ভেরিফিকেশন</h3>
+      <button type="button" class="btn btn-secondary" style="margin-bottom: 15px;" onclick="fetchAutoLocation()">📍 অটো জিপিএস (লাইভ লোকেশন নিন)</button>
+      
+      <form onsubmit="saveShopProfile(event)">
+        <label><b>দোকানের নাম</b></label>
+        <input type="text" id="edit-shop-name" required placeholder="যেমন: মেসার্স রহিম স্টোর">
+        
+        <label><b>দোকান নং / রোড নম্বর / বাজার</b></label>
+        <input type="text" id="edit-shop-road" required placeholder="যেমন: দোকান নং ৪২, রোড নং ৫">
+        
+        <label><b>গ্রাম / মহল্লা / এলাকার নাম</b></label>
+        <input type="text" id="edit-shop-village" required placeholder="যেমন: কাঁচাবাজার, মিরপুর-১০">
+        
+        <label><b>থানা / উপজেলা ও জেলা</b></label>
+        <input type="text" id="edit-shop-area" required placeholder="যেমন: মিরপুর, ঢাকা">
+        
+        <label><b>মোবাইল নম্বর (ভেরিফাইড)</b></label>
+        <input type="text" id="edit-shop-phone" required placeholder="যেমন: 01711223344">
+
+        <label><b>জিমেইল আইডি (ভেরিফাইড)</b></label>
+        <input type="email" id="edit-shop-email" required placeholder="যেমন: shop@gmail.com">
+
+        <label><b>গুগল ম্যাপ্স লিংক (অটো সেভ হবে)</b></label>
+        <input type="text" id="edit-shop-map" placeholder="ম্যাপস লিংক তৈরি হবে..." readonly style="background: #f1f5f9;">
+        
+        <div style="display: flex; gap: 10px; margin-top: 15px;">
+          <button type="submit" class="btn">সেভ করুন</button>
+          <button type="button" class="btn btn-danger" onclick="hideShopModal()">বাতিল</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- নোটিফিকেশন পপ-আপ -->
+  <div id="alert-modal" class="modal-overlay">
+    <div class="modal-box" style="text-align: center; padding: 25px 20px;">
+      <div style="font-size: 2.5rem; margin-bottom: 10px;">✅</div>
+      <h3 id="alert-msg" style="margin-bottom: 20px; color: #1f2937; font-size: 1.1rem; line-height: 1.4;">মেসেজ</h3>
+      <button class="btn" style="padding: 12px; font-size: 1rem;" onclick="closeAlert()">ঠিক আছে (OK)</button>
+    </div>
+  </div>
+
+  <script>
+    const SUPER_ADMIN_PASS = "ADMIN2552";
+    const SUPER_ADMIN_PHONE = "01778686760";
+    const SUPER_ADMIN_EMAIL = "sohorabhossain720@gmail.com";
+
+    // ১. কোম্পানি লিস্ট
+    let companies = [
+      { id: 'shb_group', name: 'এসএইচবি গ্রুপ লিমিটেড', phone: '01800000000', email: 'shb@gmail.com', pass: 'shb123' },
+      { id: 'city_group', name: 'সিটি গ্রুপ (তীর ব্র্যান্ড)', phone: '01811111111', email: 'city@gmail.com', pass: 'city123' }
+    ];
+
+    // ২. এরিয়া ডিলার লিস্ট
+    let dealers = [
+      { id: 'dealer_mirpur', companyId: 'shb_group', name: 'মেসার্স বিসমিল্লাহ ট্রেডার্স', zone: 'মিরপুর জোন', phone: '01700000000', email: 'mirpurdealer@gmail.com', pass: '2104' },
+      { id: 'dealer_uttara', companyId: 'shb_group', name: 'মেসার্স সততা এন্টারপ্রাইজ', zone: 'উত্তরা জোন', phone: '01711111111', email: 'uttaradealer@gmail.com', pass: '1234' },
+      { id: 'dealer_dhanmondi', companyId: 'city_group', name: 'মেসার্স হক সপ্লাইয়ার্স', zone: 'ধানমন্ডি এরিয়া', phone: '01722222222', email: 'dhanmondidealer@gmail.com', pass: '9988' }
+    ];
+
+    // ৩. কোম্পানির মাস্টার পণ্য
+    let companyMasterProducts = [
+      { id: 101, companyId: 'shb_group', name: 'এসএইচবি সয়াবিন তেল (৫ লিটার)', basePrice: 800 },
+      { id: 102, companyId: 'city_group', name: 'তীর সয়াবিন তেল (৫ লিটার)', basePrice: 810 }
+    ];
+
+    // ৪. ডিলারের নিজস্ব পণ্য ও স্টক
+    let dealerProducts = [
+      { id: 1, dealerId: 'dealer_mirpur', name: 'তীর সয়াবিন তেল (৫ লিটার)', price: 810, stock: '45 বোতল' },
+      { id: 2, dealerId: 'dealer_mirpur', name: 'মিনিকেট চাল (২৫ কেজি বস্তা)', price: 1650, stock: '20 বস্তা' },
+      { id: 3, dealerId: 'dealer_uttara', name: 'মসুর ডাল (১ কেজি)', price: 130, stock: '100 কেজি' },
+      { id: 4, dealerId: 'dealer_dhanmondi', name: 'রূপচাঁদা সয়াবিন তেল (৫ লিটার)', price: 830, stock: '30 বোতল' }
+    ];
+
+    let cart = [];
+    let orders = [];
+
+    let currentLoggedInDealer = null;
+    let currentLoggedInCompany = null;
+    let isAdminLoggedIn = false;
+    let loginTargetMode = '';
+    let recoveryRoleContext = '';
+    let dealerPendingDeleteId = null;
+    let tempRecoveryTarget = null;
+    let generatedAutoOTP = "";
+
+    let shopProfile = {
+      name: 'মেসার্স রহিম স্টোর',
+      road: 'দোকান নং ৪২, রোড নং ৫',
+      village: 'কাঁচাবাজার, মিরপুর-১০',
+      area: 'মিরপুর, ঢাকা',
+      phone: '01711223344',
+      email: 'rahimstore@gmail.com',
+      mapUrl: 'https://www.google.com/maps/search/?api=1&query=23.8069,90.3687'
+    };
+
+    function showAlert(msg) {
+      document.getElementById('alert-msg').innerText = msg;
+      document.getElementById('alert-modal').style.display = 'flex';
+    }
+
+    function closeAlert() {
+      document.getElementById('alert-modal').style.display = 'none';
+    }
+
+    function toggleAccordion(bodyId, iconId) {
+      const body = document.getElementById(bodyId);
+      const icon = document.getElementById(iconId);
+      if (body.style.display === 'none' || body.style.display === '') {
+        body.style.display = 'block';
+        icon.innerText = '▼';
+      } else {
+        body.style.display = 'none';
+        icon.innerText = '▶';
+      }
+    }
+
+    // --- অটো ওটিপি রিকভারি লজিক ---
+
+    function showRecoveryModal(role) {
+      recoveryRoleContext = role || loginTargetMode || 'all';
+      tempRecoveryTarget = null;
+      generatedAutoOTP = "";
+      document.getElementById('rec-input').value = '';
+      document.getElementById('rec-error').style.display = 'none';
+      document.getElementById('rec-otp-input').value = '';
+      document.getElementById('otp-error').style.display = 'none';
+      document.getElementById('new-pass-input').value = '';
+
+      document.getElementById('rec-step-1').style.display = 'block';
+      document.getElementById('rec-step-2').style.display = 'none';
+      document.getElementById('rec-step-3').style.display = 'none';
+      document.getElementById('recovery-modal').style.display = 'flex';
+    }
+
+    function hideRecoveryModal() {
+      document.getElementById('recovery-modal').style.display = 'none';
+    }
+
+    function openRecoveryFromLogin() {
+      hidePassModal();
+      showRecoveryModal(loginTargetMode);
+    }
+
+    function sendAutoRecoveryOTP() {
+      const inputVal = document.getElementById('rec-input').value.trim().toLowerCase();
+      const errEl = document.getElementById('rec-error');
+      errEl.style.display = 'none';
+
+      if (!inputVal) {
+        errEl.innerText = "দয়া করে রেজিস্টার্ড মোবাইল নম্বর অথবা জিমেইল লিখুন!";
+        errEl.style.display = 'block';
+        return;
+      }
+
+      let foundObj = null;
+
+      if (inputVal === SUPER_ADMIN_PHONE || inputVal === SUPER_ADMIN_EMAIL.toLowerCase()) {
+        foundObj = { type: 'admin', name: 'Super Admin', id: 'Admin' };
+      } else {
+        const matchedDealer = dealers.find(d => d.phone === inputVal || d.email.toLowerCase() === inputVal);
+        if (matchedDealer) {
+          foundObj = matchedDealer;
+          foundObj.type = 'dealer';
+        } else {
+          const matchedCompany = companies.find(c => c.phone === inputVal || c.email.toLowerCase() === inputVal);
+          if (matchedCompany) {
+            foundObj = matchedCompany;
+            foundObj.type = 'company';
+          } else if (shopProfile.phone === inputVal || shopProfile.email.toLowerCase() === inputVal) {
+            foundObj = shopProfile;
+            foundObj.type = 'shop';
+          }
+        }
+      }
+
+      if (!foundObj) {
+        errEl.innerText = "এই মোবাইল নম্বর বা জিমেইলের কোনো রেজিস্টার্ড আইডি পাওয়া যায়নি!";
+        errEl.style.display = 'block';
+        return;
+      }
+
+      tempRecoveryTarget = foundObj;
+      
+      generatedAutoOTP = Math.floor(1000 + Math.random() * 9000).toString();
+      document.getElementById('rec-otp-input').value = generatedAutoOTP;
+      document.getElementById('otp-sent-msg').innerText = `✅ ওটিপি অটো পাঠানো হয়েছে: ${generatedAutoOTP}`;
+      
+      document.getElementById('rec-step-1').style.display = 'none';
+      document.getElementById('rec-step-2').style.display = 'block';
+    }
+
+    function verifyAutoRecoveryOTP() {
+      const otpVal = document.getElementById('rec-otp-input').value.trim();
+      const otpErr = document.getElementById('otp-error');
+      otpErr.style.display = 'none';
+
+      if (otpVal === generatedAutoOTP) {
+        document.getElementById('rec-step-2').style.display = 'none';
+        document.getElementById('rec-step-3').style.display = 'block';
+      } else {
+        otpErr.style.display = 'block';
+      }
+    }
+
+    function saveNewPassword() {
+      const newPass = document.getElementById('new-pass-input').value.trim();
+      if (!newPass) {
+        return showAlert('দয়া করে নতুন পাসওয়ার্ড লিখুন!');
+      }
+
+      if (tempRecoveryTarget.type === 'admin') {
+        showAlert('সফল! মেগা অ্যাডমিনের মাস্টার পাসওয়ার্ড এখন থেকে: ' + newPass);
+      } else if (tempRecoveryTarget.type === 'dealer') {
+        const d = dealers.find(item => item.id === tempRecoveryTarget.id);
+        if (d) d.pass = newPass;
+        showAlert(`সফল! ডিলার "${d.name}" (আইডি: ${d.id}) এর পাসওয়ার্ড পরিবর্তন করা হয়েছে।`);
+      } else if (tempRecoveryTarget.type === 'company') {
+        const c = companies.find(item => item.id === tempRecoveryTarget.id);
+        if (c) c.pass = newPass;
+        showAlert(`সফল! কোম্পানি "${c.name}" এর পাসওয়ার্ড পরিবর্তন করা হয়েছে।`);
+      } else {
+        showAlert('সফল! দোকানদারের প্রোফাইল পাসওয়ার্ড আপডেট হয়েছে।');
+      }
+
+      hideRecoveryModal();
+    }
+
+    // --- দোকানদার প্যানেল লজিক ---
+
+    function populateCompanySelect() {
+      const cSelect = document.getElementById('company-select');
+      cSelect.innerHTML = '';
+      companies.forEach(c => {
+        cSelect.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+      });
+      onCompanySelectChange();
+    }
+
+    function onCompanySelectChange() {
+      const selectedCompanyId = document.getElementById('company-select').value;
+      const dSelect = document.getElementById('dealer-select');
+      dSelect.innerHTML = '';
+
+      const matchedDealers = dealers.filter(d => d.companyId === selectedCompanyId);
+      if (matchedDealers.length === 0) {
+        dSelect.innerHTML = `<option value="">এই কোম্পানির কোনো এরিয়া ডিলার উপলব্ধ নেই</option>`;
+      } else {
+        matchedDealers.forEach(d => {
+          dSelect.innerHTML += `<option value="${d.id}">📍 ${d.zone} - ${d.name}</option>`;
+        });
+      }
+      filterProductsByDealer();
+    }
+
+    function filterProductsByDealer() {
+      const selectedDealerId = document.getElementById('dealer-select').value;
+      renderShopProducts(selectedDealerId);
+    }
+
+    function renderShopProducts(dealerId) {
+      const container = document.getElementById('product-list');
+      container.innerHTML = '';
+
+      if (!dealerId) {
+        container.innerHTML = '<p style="color:#64748b;">কোনো ডিলার নির্বাচিত নেই।</p>';
+        return;
+      }
+
+      const filtered = dealerProducts.filter(p => p.dealerId === dealerId);
+      if (filtered.length === 0) {
+        container.innerHTML = '<p style="color:#64748b;">এই ডিলারের তালিকায় কোনো পণ্য পাওয়া যায়নি।</p>';
+        return;
+      }
+
+      filtered.forEach(p => {
+        const cartItem = cart.find(c => c.id === p.id);
+        const currentQty = cartItem ? cartItem.qty : 0;
+
+        container.innerHTML += `
+          <div class="prod-card">
+            <div>
+              <span class="badge">মজুদ: ${p.stock}</span>
+              <h4 style="margin-top:8px;">${p.name}</h4>
+              <div class="price">৳ ${p.price}</div>
+            </div>
+            <div>
+              <div class="qty-control">
+                <button class="qty-btn minus" onclick="changeQty(${p.id}, -1)">-</button>
+                <input type="number" id="qty-input-${p.id}" class="qty-input" value="${currentQty}" min="0" onchange="manualQtyChange(${p.id})">
+                <button class="qty-btn" onclick="changeQty(${p.id}, 1)">+</button>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    function changeQty(productId, amount) {
+      const inputEl = document.getElementById(`qty-input-${productId}`);
+      let qty = parseInt(inputEl.value) || 0;
+      qty += amount;
+      if (qty < 0) qty = 0;
+      inputEl.value = qty;
+      updateCartQuantity(productId, qty);
+    }
+
+    function manualQtyChange(productId) {
+      const inputEl = document.getElementById(`qty-input-${productId}`);
+      let qty = parseInt(inputEl.value) || 0;
+      if (qty < 0) {
+        qty = 0;
+        inputEl.value = 0;
+      }
+      updateCartQuantity(productId, qty);
+    }
+
+    function updateCartQuantity(productId, qty) {
+      const item = dealerProducts.find(p => p.id === productId);
+      const existIndex = cart.findIndex(c => c.id === productId);
+
+      if (qty > 0) {
+        if (existIndex > -1) {
+          cart[existIndex].qty = qty;
+        } else {
+          cart.push({ ...item, qty: qty });
+        }
+      } else {
+        if (existIndex > -1) {
+          cart.splice(existIndex, 1);
+        }
+      }
+      renderCart();
+    }
+
+    function renderCart() {
+      const tbody = document.getElementById('cart-items');
+      let total = 0;
+      if (cart.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">কার্ট খালি</td></tr>';
+        document.getElementById('cart-total').innerText = '0';
+        return;
+      }
+      tbody.innerHTML = '';
+      cart.forEach(c => {
+        let sub = c.price * c.qty;
+        total += sub;
+        tbody.innerHTML += `<tr><td>${c.name}</td><td>${c.qty}</td><td>৳${sub}</td></tr>`;
+      });
+      document.getElementById('cart-total').innerText = total;
+    }
+
+    function placeOrder() {
+      if (cart.length === 0) return showAlert('কার্ট খালি!');
+      
+      const selectedDealerId = document.getElementById('dealer-select').value;
+      if (!selectedDealerId) return showAlert('কোনো এরিয়া ডিলার নির্বাচিত নেই!');
+
+      const now = new Date();
+      const formattedDateTime = now.toLocaleDateString('bn-BD', {
+        year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+      });
+
+      const newOrder = {
+        id: 'ORD-' + Math.floor(1000 + Math.random() * 9000),
+        dealerId: selectedDealerId,
+        shopName: shopProfile.name,
+        road: shopProfile.road,
+        village: shopProfile.village,
+        area: shopProfile.area,
+        phone: shopProfile.phone,
+        email: shopProfile.email,
+        mapUrl: shopProfile.mapUrl,
+        items: [...cart],
+        total: document.getElementById('cart-total').innerText,
+        date: formattedDateTime
+      };
+
+      orders.push(newOrder);
+      cart = [];
+      renderCart();
+      filterProductsByDealer();
+      if (currentLoggedInDealer) renderOrders();
+      showAlert('অর্ডার সফলভাবে উক্ত এরিয়া ডিলারের প্যানেলে পাঠানো হয়েছে!');
+    }
+
+    // --- ডিলার প্যানেল লজিক ---
+
+    function saveDealerProduct(e) {
+      e.preventDefault();
+      if (!currentLoggedInDealer) return;
+
+      const name = document.getElementById('dp-name').value;
+      const price = parseFloat(document.getElementById('dp-price').value);
+      const stock = document.getElementById('dp-stock').value;
+
+      dealerProducts.push({
+        id: Date.now(),
+        dealerId: currentLoggedInDealer.id,
+        name,
+        price,
+        stock
+      });
+
+      renderDealerOwnProducts();
+      filterProductsByDealer();
+      showAlert('পণ্য ও স্টক সফলভাবে যোগ করা হয়েছে!');
+      e.target.reset();
+    }
+
+    function deleteDealerProduct(id) {
+      dealerProducts = dealerProducts.filter(p => p.id !== id);
+      renderDealerOwnProducts();
+      filterProductsByDealer();
+      showAlert('পণ্যটি তালিকা থেকে মুছে ফেলা হয়েছে!');
+    }
+
+    function renderDealerOwnProducts() {
+      const container = document.getElementById('dealer-own-products-list');
+      if (!currentLoggedInDealer) return;
+
+      const ownProducts = dealerProducts.filter(p => p.dealerId === currentLoggedInDealer.id);
+      if (ownProducts.length === 0) {
+        container.innerHTML = '<p style="color:#64748b;">আপনার নিজস্ব কোনো পণ্য এখনো যুক্ত করা হয়নি।</p>';
+        return;
+      }
+
+      container.innerHTML = '';
+      ownProducts.forEach(p => {
+        container.innerHTML += `
+          <div style="border: 1px solid #e2e8f0; padding: 10px 14px; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <b>${p.name}</b> - <span style="color:#16a34a; font-weight:bold;">৳${p.price}</span> | <span class="badge">মজুদ: ${p.stock}</span>
+            </div>
+            <button class="btn btn-danger btn-sm" onclick="deleteDealerProduct(${p.id})">🗑️ মুছুন</button>
+          </div>
+        `;
+      });
+
+      const companyStockContainer = document.getElementById('company-master-stock-view');
+      const companyMaster = companyMasterProducts.filter(p => p.companyId === currentLoggedInDealer.companyId);
+      
+      if (companyMaster.length === 0) {
+        companyStockContainer.innerHTML = '<p style="font-size:0.85rem; color:#64748b;">কোম্পানির মূল মাস্টার তালিকায় কোনো পণ্য নেই।</p>';
+      } else {
+        companyStockContainer.innerHTML = '';
+        companyMaster.forEach(p => {
+          companyStockContainer.innerHTML += `
+            <div style="font-size:0.85rem; padding: 6px 0; border-bottom: 1px dashed #e2e8f0;">
+              📦 <b>${p.name}</b> (কোম্পানি বেস রেট: ৳${p.basePrice})
+            </div>
+          `;
+        });
+      }
+    }
+
+    function renderOrders() {
+      const container = document.getElementById('orders-list');
+      if (!currentLoggedInDealer) return;
+
+      const dealerOrders = orders.filter(o => o.dealerId === currentLoggedInDealer.id);
+      if (dealerOrders.length === 0) {
+        container.innerHTML = '<p>আপনার জন্য কোনো নতুন অর্ডার নেই।</p>';
+        return;
+      }
+
+      container.innerHTML = '';
+      dealerOrders.forEach(o => {
+        let itemsHtml = o.items.map(i => `<li>${i.name} x ${i.qty} = ৳${i.price * i.qty}</li>`).join('');
+        let mapButton = o.mapUrl ? `<a href="${o.mapUrl}" target="_blank" class="btn btn-secondary" style="margin-top:8px; width:auto; margin-right:5px; font-size:0.85rem;">🗺️ গুগল ম্যাপে দোকান দেখুন</a>` : '';
+
+        container.innerHTML += `
+          <div style="border: 1px solid #e2e8f0; padding: 12px; border-radius: 8px; margin-bottom: 10px;">
+            <h4>আইডি: ${o.id} - ${o.shopName}</h4>
+            <p style="font-size:0.85rem; color:#475569; margin-top:4px; line-height:1.4;">
+              📍 <b>রোড/দোকান:</b> ${o.road} | 🏘️ <b>গ্রাম/মহল্লা:</b> ${o.village} <br>
+              🏙️ <b>থানা/জেলা:</b> ${o.area} | 📞 <b>মোবাইল:</b> ${o.phone} | ✉️ <b>ইমেইল:</b> ${o.email}
+            </p>
+            <p style="font-size:0.85rem; color:#16a34a; font-weight:bold; margin-top:4px;">⏰ অর্ডারের সময়: ${o.date}</p>
+            <ul style="margin: 8px 0 8px 20px;">${itemsHtml}</ul>
+            <p><b>মোট বিল: ৳${o.total} (ক্যাশ অন ডেলিভারি)</b></p>
+            <div style="display:flex; flex-wrap:wrap; gap:5px;">
+              ${mapButton}
+              <button class="btn" style="margin-top:8px; width:auto;" onclick="printMemo('${o.id}')">🖨️ চালান মেমো প্রিন্ট করুন</button>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    function printMemo(orderId) {
+      const order = orders.find(o => o.id === orderId);
+      if (!order) return;
+
+      const dealerObj = dealers.find(d => d.id === order.dealerId);
+      document.getElementById('memo-dealer-title').innerText = dealerObj ? `${dealerObj.name} (${dealerObj.zone})` : 'পাইকারি পরিবেশক';
+
+      const details = document.getElementById('memo-details');
+      let itemsTable = order.items.map(i => `<tr><td>${i.name}</td><td>${i.qty}</td><td>৳${i.price * i.qty}</td></tr>`).join('');
+      let mapText = order.mapUrl ? `<p><b>গুগল ম্যাপ নেভিগেশন:</b> ${order.mapUrl}</p>` : '';
+
+      details.innerHTML = `
+        <p><b>অর্ডার নম্বর:</b> ${order.id}</p>
+        <p><b>দোকানের নাম:</b> ${order.shopName}</p>
+        <p><b>দোকান/রোড নম্বর:</b> ${order.road}</p>
+        <p><b>গ্রাম/মহল্লা/এলাকা:</b> ${order.village}</p>
+        <p><b>থানা ও জেলা:</b> ${order.area}</p>
+        <p><b>মোবাইল নম্বর:</b> ${order.phone}</p>
+        <p><b>ইমেইল:</b> ${order.email}</p>
+        ${mapText}
+        <p><b>অর্ডারের তারিখ ও সময়:</b> ${order.date}</p>
+        <br>
+        <table>
+          <thead><tr><th>পণ্য</th><th>পরিমাণ</th><th>মোট</th></tr></thead>
+          <tbody>${itemsTable}</tbody>
+        </table>
+        <h3 style="text-align:right; margin-top:10px;">সর্বমোট পরিশোধযোগ্য: ৳${order.total}</h3>
+      `;
+      document.getElementById('printable-memo').style.display = 'block';
+    }
+
+    // --- কোম্পানি প্যানেল লজিক ---
+
+    function createAreaDealer(e) {
+      e.preventDefault();
+      if (!currentLoggedInCompany) return;
+
+      const zone = document.getElementById('cd-zone').value;
+      const name = document.getElementById('cd-name').value;
+      const phone = document.getElementById('cd-phone').value.trim();
+      const email = document.getElementById('cd-email').value.trim();
+      const id = document.getElementById('cd-id').value.trim();
+      const pass = document.getElementById('cd-pass').value.trim();
+
+      const exist = dealers.find(d => d.id === id);
+      if (exist) return showAlert('এই ডিলার ইউজার আইডি ইতোমধ্যে রয়েছে!');
+
+      dealers.push({
+        id,
+        companyId: currentLoggedInCompany.id,
+        name,
+        zone,
+        phone,
+        email,
+        pass
+      });
+
+      renderCompanyDealers();
+      onCompanySelectChange();
+      showAlert(`"${zone}" এর জন্য নতুন ডিলারশিপ চালু করা হয়েছে!`);
+      e.target.reset();
+    }
+
+    function promptDeleteDealerByCompany(dealerId) {
+      const dealer = dealers.find(d => d.id === dealerId);
+      if (!dealer) return;
+
+      dealerPendingDeleteId = dealerId;
+      document.getElementById('delete-dealer-info').innerText = `ডিলার: "${dealer.name}" (জোন: ${dealer.zone})`;
+      document.getElementById('company-del-pass-input').value = '';
+      document.getElementById('company-del-err').style.display = 'none';
+      document.getElementById('company-delete-dealer-modal').style.display = 'flex';
+    }
+
+    function hideCompanyDeleteModal() {
+      document.getElementById('company-delete-dealer-modal').style.display = 'none';
+      dealerPendingDeleteId = null;
+    }
+
+    function confirmCompanyDeleteDealer() {
+      const pass = document.getElementById('company-del-pass-input').value;
+      if (!currentLoggedInCompany || pass !== currentLoggedInCompany.pass) {
+        document.getElementById('company-del-err').style.display = 'block';
+        return;
+      }
+
+      dealers = dealers.filter(d => d.id !== dealerPendingDeleteId);
+      dealerProducts = dealerProducts.filter(p => p.dealerId !== dealerPendingDeleteId);
+      orders = orders.filter(o => o.dealerId !== dealerPendingDeleteId);
+
+      hideCompanyDeleteModal();
+      renderCompanyDealers();
+      onCompanySelectChange();
+      showAlert('ডিলারশিপ একাউন্ট ও পাসওয়ার্ড সফলভাবে ডিলিট করা হয়েছে!');
+    }
+
+    function saveCompanyMasterProduct(e) {
+      e.preventDefault();
+      if (!currentLoggedInCompany) return;
+
+      const name = document.getElementById('cp-name').value;
+      const basePrice = parseFloat(document.getElementById('cp-price').value);
+
+      companyMasterProducts.push({
+        id: Date.now(),
+        companyId: currentLoggedInCompany.id,
+        name,
+        basePrice
+      });
+
+      renderCompanyMasterProducts();
+      showAlert('মাস্টার প্রডাক্ট যোগ করা হয়েছে!');
+      e.target.reset();
+    }
+
+    function renderCompanyDealers() {
+      const container = document.getElementById('company-dealers-list');
+      if (!currentLoggedInCompany) return;
+
+      const compDealers = dealers.filter(d => d.companyId === currentLoggedInCompany.id);
+      if (compDealers.length === 0) {
+        container.innerHTML = '<p style="color:#64748b;">এখনো কোনো এরিয়া ডিলারশিপ দেওয়া হয়নি।</p>';
+        return;
+      }
+
+      container.innerHTML = '';
+      compDealers.forEach(d => {
+        container.innerHTML += `
+          <div style="border: 1px solid #e2e8f0; padding: 12px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+            <div>
+              <h4>${d.name} <span class="badge-zone">${d.zone}</span></h4>
+              <p style="font-size:0.85rem; color:#64748b; margin-top:3px;">আইডি: <b>${d.id}</b> | মোবাইল: <b>${d.phone}</b> | ইমেইল: <b>${d.email}</b></p>
+            </div>
+            <button class="btn btn-danger btn-sm" onclick="promptDeleteDealerByCompany('${d.id}')">🗑️ ডিলারশিপ বাতিল/ডিলিট</button>
+          </div>
+        `;
+      });
+    }
+
+    function renderCompanyMasterProducts() {
+      const container = document.getElementById('company-master-products-list');
+      if (!currentLoggedInCompany) return;
+
+      const masters = companyMasterProducts.filter(p => p.companyId === currentLoggedInCompany.id);
+      if (masters.length === 0) {
+        container.innerHTML = '<p style="color:#64748b;">কোনো মাস্টার প্রডাক্ট যুক্ত করা নেই।</p>';
+        return;
+      }
+
+      container.innerHTML = '';
+      masters.forEach(p => {
+        container.innerHTML += `
+          <div style="border: 1px solid #e2e8f0; padding: 8px 12px; border-radius: 6px; margin-bottom: 6px; font-size:0.9rem;">
+            📦 <b>${p.name}</b> - বেস প্রাইস: ৳${p.basePrice}
+          </div>
+        `;
+      });
+    }
+
+    // --- মেগা অ্যাডমিন প্যানেল লজিক ---
+
+    function createCompany(e) {
+      e.preventDefault();
+      const name = document.getElementById('comp-name').value;
+      const phone = document.getElementById('comp-phone').value.trim();
+      const email = document.getElementById('comp-email').value.trim();
+      const id = document.getElementById('comp-id').value.trim();
+      const pass = document.getElementById('comp-pass').value.trim();
+
+      const exist = companies.find(c => c.id === id);
+      if (exist) return showAlert('এই কোম্পানি আইডি ইতোমধ্যে রয়েছে!');
+
+      companies.push({ id, name, phone, email, pass });
+      populateCompanySelect();
+      renderAllCompanies();
+      showAlert(`নতুন কোম্পানি "${name}" সফলভাবে যুক্ত করা হয়েছে!`);
+      e.target.reset();
+    }
+
+    function renderAllCompanies() {
+      const container = document.getElementById('all-companies-list');
+      if (companies.length === 0) {
+        container.innerHTML = '<p>কোনো রেজিস্টার্ড কোম্পানি নেই।</p>';
+        return;
+      }
+
+      container.innerHTML = '';
+      companies.forEach(c => {
+        const dealerCount = dealers.filter(d => d.companyId === c.id).length;
+        container.innerHTML += `
+          <div style="border: 1px solid #e2e8f0; padding: 12px; border-radius: 8px; margin-bottom: 10px;">
+            <h4>🏢 ${c.name}</h4>
+            <p style="font-size:0.85rem; color:#64748b; margin-top:3px;">কোম্পানি আইডি: <b>${c.id}</b> | মোবাইল: <b>${c.phone}</b> | ইমেইল: <b>${c.email}</b> | ডিলার: <b>${dealerCount} টি</b></p>
+          </div>
+        `;
+      });
+    }
+
+    // --- প্রোফাইল ও জিপিএস ---
+
+    function updateShopBanner() {
+      document.getElementById('shop-title').innerText = shopProfile.name;
+      document.getElementById('shop-desc').innerHTML = `
+        📍 <b>দোকান/রোড নং:</b> ${shopProfile.road} <br>
+        🏘️ <b>গ্রাম/মহল্লা:</b> ${shopProfile.village} <br>
+        🏙️ <b>থানা/জেলা:</b> ${shopProfile.area} | 📞 <b>মোবাইল:</b> ${shopProfile.phone} | ✉️ <b>ইমেইল:</b> ${shopProfile.email}
+      `;
+      const mapContainer = document.getElementById('map-link-container');
+      if (shopProfile.mapUrl) {
+        mapContainer.innerHTML = `<a href="${shopProfile.mapUrl}" target="_blank" style="color: #fef08a; font-weight: bold; font-size: 0.85rem;">🗺️ গুগল ম্যাপ্সে দোকানের লোকেশন দেখুন</a>`;
+      } else {
+        mapContainer.innerHTML = '';
+      }
+    }
+
+    function fetchAutoLocation() {
+      if (navigator.geolocation) {
+        showAlert("আপনার ডিভাইসের জিপিএস লোকেশন নেওয়া হচ্ছে...");
+        navigator.geolocation.getCurrentPosition(position => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+          const googleMapUrl = `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`;
+          document.getElementById('edit-shop-map').value = googleMapUrl;
+
+          fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`)
+            .then(res => res.json())
+            .then(data => {
+              if(data && data.address) {
+                const add = data.address;
+                document.getElementById('edit-shop-road').value = add.road || add.suburb || 'অটো লোকেশন প্রাপ্ত';
+                document.getElementById('edit-shop-village').value = add.neighbourhood || add.village || add.residential || 'এলাকা সংগৃহীত';
+                document.getElementById('edit-shop-area').value = (add.city_district || add.state_district || 'থানা') + ', ' + (add.state || 'জেলা');
+              }
+              showAlert("অটো লোকেশন ও গুগল ম্যাপস পিন নেওয়া সম্পন্ন হয়েছে!");
+            }).catch(() => {
+              showAlert("গুগল ম্যাপস পিন সফলভাবে সেভ হয়েছে!");
+            });
+        }, () => {
+          showAlert("লোকেশন এক্সেস পাওয়া যায়নি। আপনার ফোনের GPS অন করুন।");
+        });
+      } else {
+        showAlert("আপনার ডিভাইসে জিপিএস সাপোর্ট করছে না।");
+      }
+    }
+
+    function editShopProfile() {
+      document.getElementById('edit-shop-name').value = shopProfile.name;
+      document.getElementById('edit-shop-road').value = shopProfile.road;
+      document.getElementById('edit-shop-village').value = shopProfile.village;
+      document.getElementById('edit-shop-area').value = shopProfile.area;
+      document.getElementById('edit-shop-phone').value = shopProfile.phone;
+      document.getElementById('edit-shop-email').value = shopProfile.email;
+      document.getElementById('edit-shop-map').value = shopProfile.mapUrl || '';
+      document.getElementById('shop-modal').style.display = 'flex';
+    }
+
+    function hideShopModal() {
+      document.getElementById('shop-modal').style.display = 'none';
+    }
+
+    function saveShopProfile(e) {
+      e.preventDefault();
+      shopProfile.name = document.getElementById('edit-shop-name').value;
+      shopProfile.road = document.getElementById('edit-shop-road').value;
+      shopProfile.village = document.getElementById('edit-shop-village').value;
+      shopProfile.area = document.getElementById('edit-shop-area').value;
+      shopProfile.phone = document.getElementById('edit-shop-phone').value;
+      shopProfile.email = document.getElementById('edit-shop-email').value;
+      shopProfile.mapUrl = document.getElementById('edit-shop-map').value;
+      
+      updateShopBanner();
+      hideShopModal();
+      showAlert('দোকানের তথ্য ও ভেরিফিকেশন ইমেইল/নম্বর সফলভাবে আপডেট হয়েছে!');
+    }
+
+    // --- লগইন ভেরিফিকেশন ---
+
+    function showPassModal(mode) {
+      loginTargetMode = mode;
+      document.getElementById('login-pass-input').value = '';
+      document.getElementById('pass-error').style.display = 'none';
+
+      if (mode === 'dealer') {
+        if (currentLoggedInDealer) return switchView('dealer');
+        document.getElementById('modal-title').innerText = '📈 এরিয়া ডিলার লগইন';
+        document.getElementById('dynamic-login-fields').style.display = 'block';
+        document.getElementById('login-user-id').placeholder = 'ডিলার আইডি (যেমন: dealer_mirpur)';
+      } else if (mode === 'company') {
+        if (currentLoggedInCompany) return switchView('company');
+        document.getElementById('modal-title').innerText = '🏢 কোম্পানি অ্যাডমিন লগইন';
+        document.getElementById('dynamic-login-fields').style.display = 'block';
+        document.getElementById('login-user-id').placeholder = 'কোম্পানি আইডি (যেমন: shb_group)';
+      } else {
+        if (isAdminLoggedIn) return switchView('admin');
+        document.getElementById('modal-title').innerText = '👑 মেগা অ্যাডমিন লক';
+        document.getElementById('dynamic-login-fields').style.display = 'none';
+      }
+
+      document.getElementById('pass-modal').style.display = 'flex';
+    }
+
+    function hidePassModal() {
+      document.getElementById('pass-modal').style.display = 'none';
+    }
+
+    function verifyLogin() {
+      const pass = document.getElementById('login-pass-input').value;
+
+      if (loginTargetMode === 'dealer') {
+        const userId = document.getElementById('login-user-id').value.trim();
+        const matched = dealers.find(d => d.id === userId && d.pass === pass);
+        if (matched) {
+          currentLoggedInDealer = matched;
+          document.getElementById('current-dealer-name').innerText = `${matched.name} (${matched.zone})`;
+          document.getElementById('current-dealer-info').innerText = `ডিলার আইডি: ${matched.id}`;
+          hidePassModal();
+          renderDealerOwnProducts();
+          renderOrders();
+          switchView('dealer');
+        } else {
+          document.getElementById('pass-error').style.display = 'block';
+        }
+      } else if (loginTargetMode === 'company') {
+        const userId = document.getElementById('login-user-id').value.trim();
+        const matched = companies.find(c => c.id === userId && c.pass === pass);
+        if (matched) {
+          currentLoggedInCompany = matched;
+          document.getElementById('current-company-title').innerText = matched.name;
+          document.getElementById('current-company-id').innerText = `কোম্পানি আইডি: ${matched.id}`;
+          hidePassModal();
+          renderCompanyDealers();
+          renderCompanyMasterProducts();
+          switchView('company');
+        } else {
+          document.getElementById('pass-error').style.display = 'block';
+        }
+      } else if (loginTargetMode === 'admin') {
+        if (pass === SUPER_ADMIN_PASS) {
+          isAdminLoggedIn = true;
+          hidePassModal();
+          renderAllCompanies();
+          switchView('admin');
+        } else {
+          document.getElementById('pass-error').style.display = 'block';
+        }
+      }
+    }
+
+    function logoutDealer() {
+      currentLoggedInDealer = null;
+      showAlert("ডিলার প্যানেল থেকে লগআউট করা হয়েছে!");
+      switchView('shop');
+    }
+
+    function logoutCompany() {
+      currentLoggedInCompany = null;
+      showAlert("কোম্পানি প্যানেল থেকে লগআউট করা হয়েছে!");
+      switchView('shop');
+    }
+
+    function logoutAdmin() {
+      isAdminLoggedIn = false;
+      showAlert("মেগা অ্যাডমিন প্যানেল বন্ধ করা হয়েছে!");
+      switchView('shop');
+    }
+
+    function switchView(view) {
+      document.getElementById('shop-view').style.display = view === 'shop' ? 'block' : 'none';
+      document.getElementById('dealer-view').style.display = view === 'dealer' ? 'block' : 'none';
+      document.getElementById('company-view').style.display = view === 'company' ? 'block' : 'none';
+      document.getElementById('admin-view').style.display = view === 'admin' ? 'block' : 'none';
+
+      document.getElementById('btn-shop').classList.toggle('active', view === 'shop');
+      document.getElementById('btn-dealer').classList.toggle('active', view === 'dealer');
+      document.getElementById('btn-company').classList.toggle('active', view === 'company');
+      document.getElementById('btn-admin').classList.toggle('active', view === 'admin');
+    }
+
+    updateShopBanner();
+    populateCompanySelect();
+  </script>
+</body>
+</html>
